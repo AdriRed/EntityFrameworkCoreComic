@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ComicDb
+namespace ComicStoreDb
 {
     static class Methods
     {
@@ -25,5 +25,6 @@ namespace ComicDb
         {
             return new DateTime(target[2], target[1], target[0]);
         }
+
     }
 }
