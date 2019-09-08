@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ComicStoreDb
 {
-    static class Methods
+    internal static class Methods
     {
         public static int[] ToInt(this string[] target)
         {
@@ -26,5 +24,20 @@ namespace ComicStoreDb
             return new DateTime(target[2], target[1], target[0]);
         }
 
+        public static string[] AddWhitespaces(this string[] target)
+        {
+            for (int i = 0; i < target.Length; i++)
+            {
+                for (int j = 0; j < target[i].Length - 1; j++)
+                {
+                    if (Char.IsLower(target[i][j]) && Char.IsUpper(target[i][j + 1]))
+                    {
+                        target[i] = target[i].Substring(0, j + 1) + " " + target[i].Substring(j + 1);
+                    }
+                }
+            }
+
+            return target;
+        }
     }
 }

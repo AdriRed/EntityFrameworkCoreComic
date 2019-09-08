@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ComicStoreDb;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 
 namespace ComicStoreDb.Classes
 {
@@ -18,16 +14,19 @@ namespace ComicStoreDb.Classes
             get { return data.Title; }
             set { data.Title = value; }
         }
+
         public string Description
         {
             get { return data.Description; }
             set { data.Description = value; }
         }
+
         public DateTime PublicationDate
         {
             get { return data.PublicationDate; }
             set { data.PublicationDate = value; }
         }
+
         public int Pages
         {
             get { return data.Pages; }
@@ -39,6 +38,7 @@ namespace ComicStoreDb.Classes
             get { return data.Functions; }
             set { data.Functions = value; }
         }
+
         public virtual Category Category
         {
             get { return data.Category; }
@@ -49,27 +49,31 @@ namespace ComicStoreDb.Classes
         {
             data = new ComicData();
         }
+
         public Comic(ComicData data) : this()
         {
             this.data = data;
         }
+
         public Comic(ComicRawData data) : this(data.Convert())
         {
-
         }
 
         public static bool Exsit(string title)
         {
-            return ComicsContext.db.Comics.Any(x => x.Title.ToUpper() == title.ToUpper());
+            return ComicsContext.Instance.Comics.Any(x => x.Title.ToUpper() == title.ToUpper());
         }
+
         public IData GetData()
         {
             return data;
         }
+
         public void SetData(IData data)
         {
             this.data = (ComicData)data;
         }
+
         public bool Match(string property, string value)
         {
             ComicRawData rawdata = new ComicRawData(data);
@@ -87,9 +91,26 @@ namespace ComicStoreDb.Classes
         public ICollection<Function> Functions { get; set; }
         public Category Category { get; set; }
 
+        public IRawData Convert()
+        {
+            return new ComicRawData(this);
+        }
+
         public string[] ToStringArr()
         {
-            return new ComicRawData(this).PropValues();
+            return Convert().PropValues();
+        }
+
+        public void Update(IRawData rawdata)
+        {
+            var data = ((ComicRawData)rawdata).Convert();
+
+            Title = data.Title;
+            Description = data.Description;
+            PublicationDate = data.PublicationDate;
+            Pages = data.Pages;
+
+            Category = data.Category;
         }
     }
 
@@ -104,7 +125,8 @@ namespace ComicStoreDb.Classes
             Authors = String.Empty;
             Category = String.Empty;
         }
-        public ComicRawData(string title, string description, string publicationDate, 
+
+        public ComicRawData(string title, string description, string publicationDate,
             string pages, string authors, string category) : this()
         {
             Title = title;
@@ -114,6 +136,7 @@ namespace ComicStoreDb.Classes
             Authors = authors;
             Category = category;
         }
+
         public ComicRawData(ComicData data) : this()
         {
             List<string> functions = new List<string>();
@@ -129,9 +152,9 @@ namespace ComicStoreDb.Classes
             Category = data.Category.Name;
             Authors = String.Join(", ", functions);
         }
+
         public ComicRawData(IData data) : this((ComicData)data)
         {
-
         }
 
         public string Title { get; set; }
@@ -149,14 +172,15 @@ namespace ComicStoreDb.Classes
                 Description = Description,
                 PublicationDate = PublicationDate.Split('/').ToInt().ToDate(),
                 Pages = Int32.Parse(Pages),
-                Category = ComicsContext.db.Categories.Where(x => x.Name == Category).FirstOrDefault()
+                Category = ComicsContext.Instance.Categories.Where(x => x.Name == Category).FirstOrDefault()
             };
-            
         }
+
         public string[] PropNames()
         {
             return GetType().GetProperties().Select(x => x.Name).ToArray();
         }
+
         public string[] PropValues()
         {
             return Array.ConvertAll(
@@ -164,6 +188,7 @@ namespace ComicStoreDb.Classes
                                 x => x?.ToString() ?? string.Empty)
                 ;
         }
+
         public void ConvertFromStringArr(string[] arr)
         {
             Title = arr[0];
@@ -173,6 +198,7 @@ namespace ComicStoreDb.Classes
             Authors = arr[4];
             Category = arr[5];
         }
+
         public bool Check()
         {
             DateTime date;
@@ -190,7 +216,22 @@ namespace ComicStoreDb.Classes
                 Int32.TryParse(Pages, out pages) &&
                 Classes.Category.Exist(Category) &&
                 pages > 0;
+        }
 
+        public override bool Equals(object obj)
+        {
+            return obj is ComicRawData data &&
+                   Title == data.Title &&
+                   Description == data.Description &&
+                   PublicationDate == data.PublicationDate &&
+                   Pages == data.Pages &&
+                   Authors == data.Authors &&
+                   Category == data.Category;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Title, Description, PublicationDate, Pages, Authors, Category);
         }
     }
 }

@@ -1,25 +1,25 @@
-﻿using System;
-using System.Text;
-using System.Linq;
-using System.Reflection;
-using ComicStoreDb.Classes;
+﻿using ComicStoreDb.Classes;
+using System;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Text;
 
 namespace ComicStoreDb
 {
     public class ComicsInteraction
     {
-        private delegate void Actions();
         public enum MenuLocation
         {
             MainMenu,
             TableMenu,
             ActionMenu,
+            StatisticsMenu,
+            StatisticViewer,
             CheckData,
             ChooseReg,
-            ModifyData
+            SelectedData
         }
+
         public enum Table
         {
             Authors,
@@ -27,17 +27,23 @@ namespace ComicStoreDb
             Comics
         }
 
-        private Actions[,] actions;
+        public enum RegStyle
+        {
+            HorizontalTable,
+            VerticalFields
+        }
+
+        private Action[,] actions;
+        private Action[] statistics;
         public MenuLocation Location;
         public Table ActualTable;
-        public bool exit;
+        private bool exit;
         private ComicsContext context;
 
         private Menus menus;
 
         public ComicsInteraction()
         {
-            
         }
 
         public void Start()
@@ -49,27 +55,41 @@ namespace ComicStoreDb
 
             do
             {
-                UpdateCollections();
+                UpdateContext();
                 switch (Location)
                 {
                     case MenuLocation.MainMenu:
                         exit = menus.MainMenu();
                         break;
+
                     case MenuLocation.TableMenu:
                         menus.TableMenu();
                         break;
+
                     case MenuLocation.ActionMenu:
                         actions[(int)menus.mainMenuSelection, (int)menus.tableSelection]();
                         context.SaveChanges();
                         Location = MenuLocation.MainMenu;
                         break;
+
+                    case MenuLocation.StatisticsMenu:
+                        menus.StatisticsMenu();
+                        break;
+
+                    case MenuLocation.StatisticViewer:
+                        statistics[(int)menus.statisticSelection]();
+                        Location = MenuLocation.MainMenu;
+                        break;
+
                     default:
                         exit = true;
                         break;
                 }
+                Console.Clear();
             } while (!exit);
         }
-        private void UpdateCollections()
+
+        private void UpdateContext()
         {
             foreach (var item in context.Authors)
             {
@@ -77,34 +97,44 @@ namespace ComicStoreDb
             }
             foreach (var item in context.Comics)
             {
+                //context.Entry(item).Reference(x => x.Category).Load();
                 context.Entry(item).Collection(x => x.Functions).Load();
             }
             foreach (var item in context.Categories)
             {
                 context.Entry(item).Collection(x => x.Comics).Load();
             }
+            //foreach (var item in context.Functions)
+            //{
+            //    context.Entry(item).Reference(x => x.Comic).Load();
+            //    context.Entry(item).Reference(x => x.Author).Load();
+            //}
         }
+
         private void AssignActions()
         {
-            actions = new Actions[4, 3];
-            actions[0, 0] = new Actions(AddAuthor);
-            actions[1, 0] = new Actions(ReadAuthors);
-            actions[2, 0] = new Actions(UpdateAuthor);
-            actions[3, 0] = new Actions(DeleteAuthor);
+            actions = new Action[4, 3];
+            actions[0, 0] = new Action(AddAuthor);
+            actions[1, 0] = new Action(ReadAuthors);
+            actions[2, 0] = new Action(UpdateAuthor);
+            actions[3, 0] = new Action(DeleteAuthor);
 
-            actions[0, 1] = new Actions(AddCategory);
-            actions[1, 1] = new Actions(ReadCategories);
-            actions[2, 1] = new Actions(UpdateCategory);
-            actions[3, 1] = new Actions(DeleteCategory);
+            actions[0, 1] = new Action(AddCategory);
+            actions[1, 1] = new Action(ReadCategories);
+            actions[2, 1] = new Action(UpdateCategory);
+            actions[3, 1] = new Action(DeleteCategory);
 
-            actions[0, 2] = new Actions(AddComic);
-            actions[1, 2] = new Actions(ReadComics);
-            actions[2, 2] = new Actions(UpdateComic);
-            actions[3, 2] = new Actions(DeleteComic);
+            actions[0, 2] = new Action(AddComic);
+            actions[1, 2] = new Action(ReadComics);
+            actions[2, 2] = new Action(UpdateComic);
+            actions[3, 2] = new Action(DeleteComic);
+
+            statistics = new Action[4];
+            statistics[0] = new Action(ComicsPerCategory);
+            statistics[1] = new Action(ComicsPerAuthor);
         }
 
         #region Generic
-
 
         public T AddData<T>() where T : IRawData, new()
         {
@@ -112,6 +142,7 @@ namespace ComicStoreDb
             ModifyData(data);
             return data;
         }
+
         public void ModifyData<T>(T data) where T : IRawData
         {
             var propNames = data.PropNames();
@@ -129,12 +160,12 @@ namespace ComicStoreDb
                     "*");
                 for (int i = 0; i < propNames.Length; i++)
                 {
-                    Console.WriteLine($"{(selection == i ? ">" : "*")} {propNames[i]}: {propValues[i]}");
+                    var selector = (i == selection) ? ">" : "*";
+                    Console.WriteLine($"{selector} {propNames[i]}: {propValues[i]}");
                 }
                 Console.WriteLine("*\n" +
                     (selection == propNames.Length ? ">" : "*") + " OK\n" +
                     (selection == propNames.Length + 1 ? ">" : "*") + " BACK");
-
 
                 key = Console.ReadKey(true);
 
@@ -149,7 +180,6 @@ namespace ComicStoreDb
                     {
                         actualString = new StringBuilder(propValues[selection]);
                     }
-
                 }
                 else if (key.Key == ConsoleKey.Backspace)
                 {
@@ -177,13 +207,14 @@ namespace ComicStoreDb
                     {
                         actualString.Append(key.KeyChar);
                     }
-                } 
+                }
                 if (selection >= 0 && selection < propNames.Length)
                     propValues[selection] = actualString.ToString().Trim();
             } while (!exit);
 
             data.ConvertFromStringArr(propValues);
         }
+
         private void PrintSeparator()
         {
             for (int i = 0; i < Console.WindowWidth; i++)
@@ -192,89 +223,123 @@ namespace ComicStoreDb
             }
             Console.WriteLine();
         }
-        private void PrintHeaders(string[] headers, int charsPerField)
+
+        private void PrintHeaders(string[] headers, string pre, string post)
         {
+            int charsPerField = Console.WindowWidth / headers.Length - pre.Length - post.Length - 1;
             foreach (var item in headers)
             {
-                Console.Write(item.PadRight(charsPerField) + "|");
+                Console.Write(pre);
+                if (item.Length <= charsPerField)
+                    Console.Write(item.PadRight(charsPerField));
+                else
+                    Console.Write(item.PadRight(charsPerField).Substring(0, charsPerField - 3) + "...");
+                Console.Write(post);
             }
             Console.WriteLine();
             PrintSeparator();
         }
-        public void PrintReg(string[] values, int charsPerField)
+
+        public void PrintReg(IRawData rawData, string pre, string post, RegStyle style)
         {
-            foreach (var value in values)
+            var propVals = rawData.PropValues();
+
+            switch (style)
             {
-                Console.Write(value.PadRight(charsPerField) + "|");
+                case RegStyle.HorizontalTable:
+
+                    int charsPerField = Console.WindowWidth / propVals.Length - pre.Length - post.Length - 1;
+                    foreach (var value in propVals)
+                    {
+                        Console.Write(pre);
+                        if (value.Length <= charsPerField)
+                            Console.Write(value.PadRight(charsPerField));
+                        else
+                            Console.Write(value.PadRight(charsPerField).Substring(0, charsPerField - 3) + "...");
+                        Console.Write(post);
+                    }
+                    Console.WriteLine();
+                    break;
+
+                case RegStyle.VerticalFields:
+
+                    var propNames = rawData.PropNames();
+                    for (int i = 0; i < propVals.Length; i++)
+                    {
+                        Console.WriteLine(pre + propNames[i] + ": " + propVals[i]);
+                    }
+
+                    break;
             }
-            Console.WriteLine();
         }
+
         public void ReadData<T>(ICollection<T> data) where T : IRawData, new()
         {
             string[] headers = (new T()).PropNames();
             int charsPerField = Console.WindowWidth / headers.Length - 1;
 
-            PrintHeaders(headers, charsPerField);
-            
+            PrintHeaders(headers, String.Empty, "|");
+
             foreach (var item in data)
             {
-                string[] values = item.PropValues();
-                PrintReg(values, charsPerField);
+                PrintReg(item, String.Empty, "|", RegStyle.HorizontalTable);
             }
 
             Console.ReadKey(true);
         }
+
         public IQueryable<ITable> GetActualTable()
         {
             var table = (IQueryable)context.GetType().GetProperty(ActualTable.ToString()).GetValue(context);
             return table.Cast<ITable>();
-        } 
+        }
+
         public IData[] Query(string property, string value)
         {
             var query = GetActualTable().Where(x => x.Match(property, value)).Select(x => x.GetData());
 
             return query.ToArray();
         }
+
         public T FindData<T>(out int id) where T : IRawData, new()
         {
             var prop = ChoosePropFindBy<T>();
             id = -1;
             if (Location != MenuLocation.ChooseReg)
                 return default;
-            var existingData = ChooseReg<T>(prop, out id);
-            if (Location != MenuLocation.ModifyData)
+            var reg = ChooseReg<T>(prop, out id);
+            if (Location != MenuLocation.SelectedData)
                 return default;
-            T data = new T();
-            data.ConvertFromStringArr(existingData);
-            return data;
+            return (T)reg;
         }
-        private string[] ChooseReg<T>(string findBy, out int id) where T : IRawData, new()
+
+        private IRawData ChooseReg<T>(string findBy, out int id) where T : IRawData, new()
         {
             var propNames = new T().PropNames();
-            int charsPerField = (Console.WindowWidth - 2) / propNames.Length - 1;
             int selection = 0;
             id = -1;
             StringBuilder input = new StringBuilder(String.Empty);
             ConsoleKeyInfo inputkey;
             IData[] regs;
             bool exit = false;
-            string[] rawdata = null;
+            IRawData rawdata = null;
 
             do
             {
-                Console.WriteLine("|" + findBy + ": " + input.ToString().PadRight(Console.WindowWidth - findBy.Length - 5));
-                
-                Console.Write("-|");
-                PrintHeaders(propNames, charsPerField);
-
-                regs = (input.ToString() == String.Empty) ? 
-                    GetActualTable().Select(x => x.GetData()).ToArray() : 
+                regs = (input.ToString() == String.Empty) ?
+                    GetActualTable().Select(x => x.GetData()).ToArray() :
                     Query(findBy, input.ToString());
+
+                Console.WriteLine("-|" + findBy + ": " + input.ToString().PadRight(Console.WindowWidth - findBy.Length - 5));
+
+                Console.Write("-|");
+                PrintHeaders(propNames, String.Empty, "|");
 
                 for (int i = 0; i < regs.Length; i++)
                 {
-                    Console.Write((selection == i + 1 ? ">" : " ") + "|");
-                    PrintReg(regs[i].ToStringArr(), charsPerField);
+                    var selector = (selection == i + 1 ? ">" : " ");
+                    Console.Write(selector);
+                    PrintReg(regs[i].Convert(), "|", "", RegStyle.HorizontalTable);
                 }
 
                 inputkey = Console.ReadKey(true);
@@ -300,9 +365,9 @@ namespace ComicStoreDb
                 else if (inputkey.Key == ConsoleKey.Enter && selection != 0)
                 {
                     exit = true;
-                    rawdata = regs[selection - 1].ToStringArr();
-                    Location = MenuLocation.ModifyData;
-                    id = GetActualTable().Where(x => x.GetData().ToStringArr()[0] == rawdata[0]).Select(x => x.Id).First();
+                    rawdata = regs[selection - 1].Convert();
+                    Location = MenuLocation.SelectedData;
+                    id = GetActualTable().Where(x => x.GetData().Convert().Equals(rawdata)).Select(x => x.Id).First();
                 }
                 else if ((Char.IsLetterOrDigit(inputkey.KeyChar) || Char.IsPunctuation(inputkey.KeyChar) || Char.IsWhiteSpace(inputkey.KeyChar)) && inputkey.Key != ConsoleKey.Enter)
                 {
@@ -311,11 +376,11 @@ namespace ComicStoreDb
                 }
 
                 Console.Clear();
-
             } while (!exit);
 
             return rawdata;
         }
+
         private string ChoosePropFindBy<T>() where T : IRawData, new()
         {
             bool valid;
@@ -327,7 +392,7 @@ namespace ComicStoreDb
                 Console.WriteLine("* Choose field to find by\n");
                 for (int i = 0; i < propNames.Length; i++)
                 {
-                    Console.WriteLine($"* {i+1}) {propNames[i]}");
+                    Console.WriteLine($"* {i + 1}) {propNames[i]}");
                 }
                 Console.WriteLine($"* {propNames.Length + 1}) BACK");
                 input = Console.ReadKey(true).KeyChar - '1';
@@ -348,7 +413,43 @@ namespace ComicStoreDb
             return propNames[input];
         }
 
-        #endregion
+        private bool EnsureDelete(IRawData reg)
+        {
+            bool exit = false;
+            bool ensure = false;
+            int selection = 0;
+            ConsoleKeyInfo key;
+            do
+            {
+                Console.WriteLine("* DO YOU WANT TO DELETE THIS?");
+                Console.WriteLine("*");
+                PrintReg(reg, "* ", "", RegStyle.VerticalFields);
+                Console.WriteLine("*");
+                Console.WriteLine($"* {(selection == 0 ? "[NO]" : " NO ")} {(selection == 1 ? "[YES]" : " YES ")}");
+                key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.LeftArrow || key.Key == ConsoleKey.RightArrow)
+                {
+                    selection += (key.Key == ConsoleKey.RightArrow) ? 1 : -1;
+                    selection += 2;
+                    selection %= 2;
+                }
+                else if (key.Key == ConsoleKey.Enter)
+                {
+                    exit = true;
+                    ensure = selection == 1;
+                }
+                else if (key.Key == ConsoleKey.Escape)
+                {
+                    exit = true;
+                    Location = MenuLocation.MainMenu;
+                }
+                Console.Clear();
+            } while (!exit);
+
+            return ensure;
+        }
+
+        #endregion Generic
 
         #region Add
 
@@ -370,7 +471,6 @@ namespace ComicStoreDb
                 }
                 Console.ReadKey(true);
             }
-                
         }
 
         private void AddComic()
@@ -427,11 +527,12 @@ namespace ComicStoreDb
                 }
                 Console.ReadKey(true);
             }
-            
         }
-        #endregion
+
+        #endregion Add
 
         #region Read
+
         private void ReadAuthors()
         {
             Console.Clear();
@@ -443,6 +544,7 @@ namespace ComicStoreDb
 
             ReadData(data);
         }
+
         private void ReadComics()
         {
             Console.Clear();
@@ -454,6 +556,7 @@ namespace ComicStoreDb
 
             ReadData(data);
         }
+
         private void ReadCategories()
         {
             Console.Clear();
@@ -465,72 +568,212 @@ namespace ComicStoreDb
 
             ReadData(data);
         }
-        #endregion
+
+        #endregion Read
 
         #region Update
+
         private void UpdateAuthor()
         {
             int id;
             Console.Clear();
             var data = FindData<AuthorRawData>(out id);
-            if (Location != MenuLocation.ModifyData)
+            if (Location != MenuLocation.SelectedData)
                 return;
-            ModifyData<AuthorRawData>(data);
+            ModifyData(data);
             if (Location == MenuLocation.CheckData)
             {
                 if (data.Check())
                 {
-                    context.Authors.Find(id).SetData(data.Convert());
+                    Author target = context.Authors.Find(id);
+                    target.GetData().Update(data);
+
                     context.SaveChanges();
                     Console.Clear();
                     Console.WriteLine("Updated " + data.Name);
-                } else
+                }
+                else
                 {
                     Console.Clear();
                     Console.WriteLine("ERROR");
                 }
                 Console.ReadKey(true);
             }
-            Console.Clear();
         }
 
         private void UpdateComic()
         {
+            int id;
             Console.Clear();
-            Console.WriteLine("Update comic");
-            Console.ReadKey(true);
+            var data = FindData<ComicRawData>(out id);
+            if (Location != MenuLocation.SelectedData)
+                return;
+            ModifyData(data);
+            if (Location == MenuLocation.CheckData)
+            {
+                if (data.Check())
+                {
+                    Comic target = context.Comics.Find(id);
+
+                    //Reset Functions
+                    context.Functions.RemoveRange(context.Functions.Where(x => x.Comic.Id == id));
+
+                    foreach (var item in Author.SeparateAuthors(data.Authors))
+                    {
+                        FunctionRawData newFunction;
+                        string[] separated = Author.SeparateAuthorRole(item);
+                        newFunction = new FunctionRawData(separated[0], target.Title, separated[1]);
+                        context.Functions.Add(new Function(newFunction));
+                    }
+
+                    target.GetData().Update(data);
+                    context.SaveChanges();
+                    Console.Clear();
+                    Console.WriteLine("Updated " + data.Title);
+                }
+                else
+                {
+                    Console.Clear();
+                    Console.WriteLine("ERROR");
+                }
+                Console.ReadKey(true);
+            }
         }
 
         private void UpdateCategory()
         {
+            int id;
             Console.Clear();
-            Console.WriteLine("Update category");
-            Console.ReadKey(true);
+            var data = FindData<CategoryRawData>(out id);
+            if (Location != MenuLocation.SelectedData)
+                return;
+            ModifyData(data);
+            if (Location == MenuLocation.CheckData)
+            {
+                if (data.Check())
+                {
+                    Category target = context.Categories.Find(id);
+
+                    target.GetData().Update(data);
+
+                    context.SaveChanges();
+                    Console.Clear();
+                    Console.WriteLine("Updated " + data.Name);
+                }
+                else
+                {
+                    Console.Clear();
+                    Console.WriteLine("ERROR");
+                }
+                Console.ReadKey(true);
+            }
         }
-        #endregion
+
+        #endregion Update
 
         #region Delete
+
         private void DeleteAuthor()
         {
+            int id;
             Console.Clear();
-            Console.WriteLine("Delete author");
-            Console.ReadKey(true);
+            string field = ChoosePropFindBy<AuthorRawData>();
+            var reg = ChooseReg<AuthorRawData>(field, out id);
+            if (Location == MenuLocation.SelectedData)
+                if (EnsureDelete(reg))
+                {
+                    Author target = context.Authors.Find(id);
+
+                    context.Functions.RemoveRange(context.Functions.Where(x => x.Author == target));
+                    context.Authors.Remove(target);
+
+                    context.SaveChanges();
+                    Console.WriteLine("Deleted " + target.Name);
+                    Console.ReadKey(true);
+                }
         }
 
         private void DeleteComic()
         {
+            int id;
             Console.Clear();
-            Console.WriteLine("Delete comic");
-            Console.ReadKey(true);
+            string field = ChoosePropFindBy<ComicRawData>();
+            var reg = ChooseReg<ComicRawData>(field, out id);
+            if (Location == MenuLocation.SelectedData)
+                if (EnsureDelete(reg))
+                {
+                    Comic target = context.Comics.Find(id);
+
+                    context.Functions.RemoveRange(context.Functions.Where(x => x.Comic == target));
+                    context.Comics.Remove(target);
+
+                    context.SaveChanges();
+                    Console.WriteLine("Deleted " + target.Title);
+                    Console.ReadKey(true);
+                }
         }
 
         private void DeleteCategory()
         {
+            int id;
             Console.Clear();
-            Console.WriteLine("Delete category");
+            string field = ChoosePropFindBy<CategoryRawData>();
+            var reg = ChooseReg<CategoryRawData>(field, out id);
+            if (Location == MenuLocation.SelectedData)
+                if (EnsureDelete(reg))
+                {
+                    Category target = context.Categories.Find(id);
+
+                    context.Categories.Remove(target);
+
+                    context.SaveChanges();
+                    Console.WriteLine("Deleted " + target.Name);
+                    Console.ReadKey(true);
+                }
+        }
+
+        #endregion Delete
+
+        #region Statistics
+
+        private void ComicsPerCategory()
+        {
+            var query = context.Comics.GroupBy(x => x.Category);
+            foreach (var category in query)
+            {
+                int ncomics = category.Count();
+                Console.WriteLine(category.Key.Name + ": " + ncomics);
+            }
+
             Console.ReadKey(true);
         }
-        #endregion
 
+        private void ComicsPerAuthor()
+        {
+            var query = from comic in context.Comics
+                        from function in context.Functions
+                        from author in context.Authors
+                        where function.Comic == comic
+                        where function.Author == author
+                        group function by author into authorGroup
+                        select authorGroup;
+
+            foreach (var item in query)
+            {
+                Console.WriteLine(item.Key.Name + ": " + item.Count());
+            }
+
+            Console.ReadKey(true);
+        }
+
+        private void LongestComics()
+        {
+        }
+
+        private void AuthorsPerNationality()
+        {
+        }
+
+        #endregion Statistics
     }
 }

@@ -1,22 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ComicStoreDb
 {
     public class Menus
     {
         private ComicsInteraction sender;
+
         public Menus(ComicsInteraction sender)
         {
             this.sender = sender;
         }
+
         public enum MainMenuSelection
         {
             Add, //0
             Read, //1
             Update,
             Delete,
+            Statistics,
             Exit
         }
 
@@ -28,31 +29,42 @@ namespace ComicStoreDb
             Back
         }
 
-        public MainMenuSelection mainMenuSelection;
-        public TableSelection tableSelection;
+        public enum StatisticsSelection
+        {
+            ComicsPerCategory,
+            ComicsPerAuthor,
+            LongestComics,
+            AuthorsPerNationality,
+            Back
+        }
+
+        public MainMenuSelection mainMenuSelection { get; private set; }
+        public TableSelection tableSelection { get; private set; }
+        public StatisticsSelection statisticSelection { get; private set; }
 
         private int input;
         private bool validInput;
 
         public bool MainMenu()
         {
-
+            var enumNames = Enum.GetNames(typeof(MainMenuSelection));
             Console.CursorVisible = false;
+            bool exit = false;
+
             do
             {
-                Console.Clear();
                 Console.WriteLine("* Welcome to the Comic Store.\n" +
                                     "* What do you want to do?\n" +
-                                    "*\n" +
-                                    "* 1) Add\n" +
-                                    "* 2) Read\n" +
-                                    "* 3) Update\n" +
-                                    "* 4) Delete\n" +
-                                    "* 5) Exit");
+                                    "*");
+                int count = 1;
+                foreach (var item in enumNames)
+                {
+                    Console.WriteLine($"* {count++}) {item}");
+                }
 
                 input = Console.ReadKey(true).KeyChar - '1';
 
-                validInput = input >= 0 && input <= 4;
+                validInput = input >= 0 && input < enumNames.Length;
 
                 if (validInput)
                 {
@@ -61,7 +73,13 @@ namespace ComicStoreDb
                     {
                         case MainMenuSelection.Exit:
                             {
-                                return true;
+                                exit = true;
+                                break;
+                            }
+                        case MainMenuSelection.Statistics:
+                            {
+                                sender.Location = ComicsInteraction.MenuLocation.StatisticsMenu;
+                                break;
                             }
                         default:
                             {
@@ -70,26 +88,31 @@ namespace ComicStoreDb
                             }
                     }
                 }
+                Console.Clear();
             } while (!validInput);
 
-            return false;
+            return exit;
         }
 
         public void TableMenu()
         {
+            var enumNames = Enum.GetNames(typeof(TableSelection));
+
             do
             {
                 Console.Clear();
-                Console.WriteLine("* What do you want to " + mainMenuSelection.ToString().ToLower() + " ?\n" +
-                                    "*\n" +
-                                    "* 1) Author\n" +
-                                    "* 2) Category\n" +
-                                    "* 3) Comic\n" +
-                                    "* 4) Back");
+                Console.WriteLine("* What do you want to " + mainMenuSelection.ToString().ToLower() + "?\n" +
+                                    "*");
+
+                int count = 1;
+                foreach (var item in enumNames)
+                {
+                    Console.WriteLine($"* {count++}) {item}");
+                }
 
                 input = Console.ReadKey(true).KeyChar - '1';
 
-                validInput = input >= 0 && input <= 3;
+                validInput = input >= 0 && input < enumNames.Length;
 
                 if (validInput)
                 {
@@ -99,6 +122,7 @@ namespace ComicStoreDb
                         case TableSelection.Back:
                             sender.Location = ComicsInteraction.MenuLocation.MainMenu;
                             break;
+
                         default:
                             sender.Location = ComicsInteraction.MenuLocation.ActionMenu;
                             sender.ActualTable = (ComicsInteraction.Table)tableSelection;
@@ -106,6 +130,48 @@ namespace ComicStoreDb
                     }
                 }
             } while (!validInput);
+        }
+
+        public void StatisticsMenu()
+        {
+            var enumNames = Enum.GetNames(typeof(StatisticsSelection)).AddWhitespaces();
+            bool exit = false;
+            bool validInput;
+            int input;
+            StatisticsSelection selection;
+            do
+            {
+                Console.WriteLine("* What statistic do you want to visualize?\n" +
+                    "*");
+
+                int count = 1;
+                foreach (var item in enumNames)
+                {
+                    Console.WriteLine($"* {count++}) {item}");
+                }
+
+                input = Console.ReadKey(true).KeyChar - '1';
+
+                validInput = input >= 0 && input < enumNames.Length;
+
+                if (validInput)
+                {
+                    selection = (StatisticsSelection)input;
+                    exit = true;
+                    switch (selection)
+                    {
+                        case StatisticsSelection.Back:
+                            sender.Location = ComicsInteraction.MenuLocation.MainMenu;
+                            break;
+
+                        default:
+                            statisticSelection = selection;
+                            sender.Location = ComicsInteraction.MenuLocation.StatisticViewer;
+                            break;
+                    }
+                }
+                Console.Clear();
+            } while (!exit);
         }
     }
 }

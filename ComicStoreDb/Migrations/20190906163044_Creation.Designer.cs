@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ComicStoreDb.Migrations
 {
     [DbContext(typeof(ComicsContext))]
-    [Migration("20190905104810_AddedCategoryFK")]
-    partial class AddedCategoryFK
+    [Migration("20190906163044_Creation")]
+    partial class Creation
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

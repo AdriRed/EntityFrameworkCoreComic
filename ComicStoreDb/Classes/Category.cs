@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using ComicStoreDb;
-using System.Text;
 using System.Linq;
 
 namespace ComicStoreDb.Classes
@@ -16,6 +14,7 @@ namespace ComicStoreDb.Classes
             get { return data.Name; }
             set { data.Name = value; }
         }
+
         public string Description
         {
             get { return data.Description; }
@@ -32,33 +31,38 @@ namespace ComicStoreDb.Classes
         {
             data = new CategoryData();
         }
+
         public Category(CategoryData data) : this()
         {
             this.data = data;
         }
+
         public Category(CategoryRawData data) : this(data.Convert())
         {
-
         }
 
         public static bool Exist(string categoryName)
         {
-            return ComicsContext.db.Categories.Any(x => x.Name == categoryName);
+            return ComicsContext.Instance.Categories.Any(x => x.Name == categoryName);
         }
+
         public IData GetData()
         {
             return data;
         }
+
         public void SetData(IData data)
         {
             this.data = (CategoryData)data;
         }
+
         public bool Match(string property, string value)
         {
             CategoryRawData rawdata = new CategoryRawData(data);
             return rawdata.GetType().GetProperty(property).GetValue(rawdata).ToString().ToUpper().Contains(value.ToUpper());
         }
     }
+
     public class CategoryData : IData
     {
         public string Name { get; set; }
@@ -66,11 +70,25 @@ namespace ComicStoreDb.Classes
 
         public ICollection<Comic> Comics { get; set; }
 
+        public IRawData Convert()
+        {
+            return new CategoryRawData(this);
+        }
+
         public string[] ToStringArr()
         {
-            return new CategoryRawData(this).PropValues();
+            return Convert().PropValues();
+        }
+
+        public void Update(IRawData rawdata)
+        {
+            var data = ((CategoryRawData)rawdata).Convert();
+
+            Name = data.Name;
+            Description = data.Description;
         }
     }
+
     public class CategoryRawData : IRawData
     {
         public CategoryRawData()
@@ -78,19 +96,21 @@ namespace ComicStoreDb.Classes
             Name = String.Empty;
             Description = String.Empty;
         }
+
         public CategoryRawData(string name, string description)
         {
             Name = name;
             Description = description;
         }
+
         public CategoryRawData(CategoryData data)
         {
             Name = data.Name;
             Description = data.Description;
         }
+
         public CategoryRawData(IData data) : this((CategoryData)data)
         {
-
         }
 
         public string Name { get; set; }
@@ -104,10 +124,12 @@ namespace ComicStoreDb.Classes
                 Description = Description
             };
         }
+
         public string[] PropNames()
         {
             return GetType().GetProperties().Select(x => x.Name).ToArray();
         }
+
         public string[] PropValues()
         {
             return Array.ConvertAll(
@@ -115,6 +137,7 @@ namespace ComicStoreDb.Classes
                                 x => x?.ToString() ?? string.Empty)
                 ;
         }
+
         public void ConvertFromStringArr(string[] arr)
         {
             Name = arr[0];
@@ -124,6 +147,18 @@ namespace ComicStoreDb.Classes
         public bool Check()
         {
             return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CategoryRawData data &&
+                   Name == data.Name &&
+                   Description == data.Description;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Name, Description);
         }
     }
 }
