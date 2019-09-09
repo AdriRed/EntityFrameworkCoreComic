@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace ComicStoreDb.Classes
@@ -147,7 +148,7 @@ namespace ComicStoreDb.Classes
 
             Title = data.Title;
             Description = data.Description;
-            PublicationDate = data.PublicationDate.ToString("dd/mm/yyyy");
+            PublicationDate = data.PublicationDate.ToString("d");
             Pages = data.Pages.ToString();
             Category = data.Category.Name;
             Authors = String.Join(", ", functions);
