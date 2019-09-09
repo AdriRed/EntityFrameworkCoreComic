@@ -5,9 +5,8 @@ using System.Linq;
 
 namespace ComicStoreDb.Classes
 {
-    public class Comic : ITable
+    public class Comic : Table
     {
-        public int Id { get; set; }
         private ComicData data { get; set; }
 
         public string Title
@@ -46,6 +45,12 @@ namespace ComicStoreDb.Classes
             set { data.Category = value; }
         }
 
+        public virtual PublishingHouse PublishingHouse
+        {
+            get { return data.PublishingHouse; }
+            set { data.PublishingHouse = value; }
+        }
+
         public Comic()
         {
             data = new ComicData();
@@ -65,24 +70,24 @@ namespace ComicStoreDb.Classes
             return ComicsContext.Instance.Comics.Any(x => x.Title.ToUpper() == title.ToUpper());
         }
 
-        public IData GetData()
+        public override Data GetData()
         {
             return data;
         }
 
-        public void SetData(IData data)
+        public override void SetData(Data data)
         {
             this.data = (ComicData)data;
         }
 
-        public bool Match(string property, string value)
+        public override bool Match(string property, string value)
         {
             ComicRawData rawdata = new ComicRawData(data);
             return rawdata.GetType().GetProperty(property).GetValue(rawdata).ToString().ToUpper().Contains(value.ToUpper());
         }
     }
 
-    public class ComicData : IData
+    public class ComicData : Data
     {
         public string Title { get; set; }
         public string Description { get; set; }
@@ -90,19 +95,15 @@ namespace ComicStoreDb.Classes
         public int Pages { get; set; }
 
         public ICollection<Function> Functions { get; set; }
-        public Category Category { get; set; }
+        public virtual Category Category { get; set; }
+        public virtual PublishingHouse PublishingHouse { get; set; }
 
-        public IRawData Convert()
+        public override RawData Convert()
         {
             return new ComicRawData(this);
         }
 
-        public string[] ToStringArr()
-        {
-            return Convert().PropValues();
-        }
-
-        public void Update(IRawData rawdata)
+        public override void Update(RawData rawdata)
         {
             var data = ((ComicRawData)rawdata).Convert();
 
@@ -115,7 +116,7 @@ namespace ComicStoreDb.Classes
         }
     }
 
-    public class ComicRawData : IRawData
+    public class ComicRawData : RawData
     {
         public ComicRawData()
         {
@@ -125,10 +126,11 @@ namespace ComicStoreDb.Classes
             Pages = String.Empty;
             Authors = String.Empty;
             Category = String.Empty;
+            PublishingHouse = String.Empty;
         }
 
         public ComicRawData(string title, string description, string publicationDate,
-            string pages, string authors, string category) : this()
+            string pages, string authors, string category, string publishingHouse) : this()
         {
             Title = title;
             Description = description;
@@ -136,6 +138,7 @@ namespace ComicStoreDb.Classes
             Pages = pages;
             Authors = authors;
             Category = category;
+            PublishingHouse = PublishingHouse;
         }
 
         public ComicRawData(ComicData data) : this()
@@ -152,9 +155,10 @@ namespace ComicStoreDb.Classes
             Pages = data.Pages.ToString();
             Category = data.Category.Name;
             Authors = String.Join(", ", functions);
+            PublishingHouse = data.PublishingHouse.Name;
         }
 
-        public ComicRawData(IData data) : this((ComicData)data)
+        public ComicRawData(Data data) : this((ComicData)data)
         {
         }
 
@@ -164,6 +168,7 @@ namespace ComicStoreDb.Classes
         public string Pages { get; set; }
         public string Authors { get; set; }
         public string Category { get; set; }
+        public string PublishingHouse { get; set; }
 
         public ComicData Convert()
         {
@@ -173,24 +178,12 @@ namespace ComicStoreDb.Classes
                 Description = Description,
                 PublicationDate = PublicationDate.Split('/').ToInt().ToDate(),
                 Pages = Int32.Parse(Pages),
-                Category = ComicsContext.Instance.Categories.Where(x => x.Name == Category).FirstOrDefault()
+                Category = ComicsContext.Instance.Categories.Where(x => x.Name == Category).FirstOrDefault(),
+                PublishingHouse = ComicsContext.Instance.PublishingHouses.Where(x => x.Name == Category).FirstOrDefault()
             };
         }
 
-        public string[] PropNames()
-        {
-            return GetType().GetProperties().Select(x => x.Name).ToArray();
-        }
-
-        public string[] PropValues()
-        {
-            return Array.ConvertAll(
-                                GetType().GetProperties().Select(x => x.GetValue(this)).ToArray(),
-                                x => x?.ToString() ?? string.Empty)
-                ;
-        }
-
-        public void ConvertFromStringArr(string[] arr)
+        public override void ConvertFromStringArr(string[] arr)
         {
             Title = arr[0];
             Description = arr[1];
@@ -198,9 +191,10 @@ namespace ComicStoreDb.Classes
             Pages = arr[3];
             Authors = arr[4];
             Category = arr[5];
+            PublishingHouse = arr[6];
         }
 
-        public bool Check()
+        public override bool Check()
         {
             DateTime date;
             int pages;
@@ -213,8 +207,10 @@ namespace ComicStoreDb.Classes
                     return false;
             }
 
-            return DateTime.TryParse(PublicationDate, out date) &&
+            return Title.Length < 0 &&
+                DateTime.TryParse(PublicationDate, out date) &&
                 Int32.TryParse(Pages, out pages) &&
+                Classes.PublishingHouse.Exist(PublishingHouse) && 
                 Classes.Category.Exist(Category) &&
                 pages > 0;
         }
@@ -227,12 +223,13 @@ namespace ComicStoreDb.Classes
                    PublicationDate == data.PublicationDate &&
                    Pages == data.Pages &&
                    Authors == data.Authors &&
-                   Category == data.Category;
+                   Category == data.Category &&
+                   PublishingHouse == data.PublishingHouse;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Title, Description, PublicationDate, Pages, Authors, Category);
+            return HashCode.Combine(Title, Description, PublicationDate, Pages, Authors, Category, PublishingHouse);
         }
     }
 }

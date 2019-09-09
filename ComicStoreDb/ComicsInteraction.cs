@@ -134,14 +134,14 @@ namespace ComicStoreDb
 
         #region Generic
 
-        public T AddData<T>() where T : IRawData, new()
+        public T AddData<T>() where T : RawData, new()
         {
             T data = new T();
             ModifyData(data);
             return data;
         }
 
-        public void ModifyData<T>(T data) where T : IRawData
+        public void ModifyData<T>(T data) where T : RawData
         {
             var propNames = data.PropNames();
             var propValues = data.PropValues();
@@ -241,7 +241,7 @@ namespace ComicStoreDb
             PrintSeparator();
         }
 
-        public void PrintReg(IRawData rawData, string pre, string post, RegStyle style)
+        public void PrintReg(RawData rawData, string pre, string post, RegStyle style)
         {
             var propVals = rawData.PropValues();
 
@@ -274,7 +274,7 @@ namespace ComicStoreDb
             }
         }
 
-        public void ReadData<T>(ICollection<T> data) where T : IRawData, new()
+        public void ReadData<T>(ICollection<T> data) where T : RawData, new()
         {
             string[] headers = (new T()).PropNames();
             int charsPerField = Console.WindowWidth / headers.Length - 1;
@@ -289,20 +289,20 @@ namespace ComicStoreDb
             Console.ReadKey(true);
         }
 
-        public IQueryable<ITable> GetActualTable()
+        public IQueryable<ComicStoreDb.Table> GetActualTable()
         {
             var table = (IQueryable)context.GetType().GetProperty(ActualTable.ToString()).GetValue(context);
-            return table.Cast<ITable>();
+            return table.Cast<ComicStoreDb.Table>();
         }
 
-        public IData[] Query(string property, string value)
+        public Data[] Query(string property, string value)
         {
             var query = GetActualTable().Where(x => x.Match(property, value)).Select(x => x.GetData());
 
             return query.ToArray();
         }
 
-        public T FindData<T>(out int id) where T : IRawData, new()
+        public T FindData<T>(out int id) where T : RawData, new()
         {
             var prop = ChoosePropFindBy<T>();
             id = -1;
@@ -314,16 +314,16 @@ namespace ComicStoreDb
             return (T)reg;
         }
 
-        private IRawData ChooseReg<T>(string findBy, out int id) where T : IRawData, new()
+        private RawData ChooseReg<T>(string findBy, out int id) where T : RawData, new()
         {
             var propNames = new T().PropNames();
             int selection = 0;
             id = -1;
             StringBuilder input = new StringBuilder(String.Empty);
             ConsoleKeyInfo inputkey;
-            IData[] regs;
+            Data[] regs;
             bool exit = false;
-            IRawData rawdata = null;
+            RawData rawdata = null;
 
             do
             {
@@ -382,7 +382,7 @@ namespace ComicStoreDb
             return rawdata;
         }
 
-        private string ChoosePropFindBy<T>() where T : IRawData, new()
+        private string ChoosePropFindBy<T>() where T : RawData, new()
         {
             bool valid;
             int input;
@@ -414,7 +414,7 @@ namespace ComicStoreDb
             return propNames[input];
         }
 
-        private bool EnsureDelete(IRawData reg)
+        private bool EnsureDelete(RawData reg)
         {
             bool exit = false;
             bool ensure = false;

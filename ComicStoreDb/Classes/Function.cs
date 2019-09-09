@@ -3,9 +3,8 @@ using System.Linq;
 
 namespace ComicStoreDb.Classes
 {
-    public class Function : ITable
+    public class Function : Table
     {
-        public int Id { get; set; }
         private FunctionData data { get; set; }
 
         public string Role
@@ -40,46 +39,41 @@ namespace ComicStoreDb.Classes
         {
         }
 
-        public IData GetData()
+        public override Data GetData()
         {
             return data;
         }
 
-        public void SetData(IData data)
+        public override void SetData(Data data)
         {
             this.data = (FunctionData)data;
         }
 
-        public bool Match(string property, string value)
+        public override bool Match(string property, string value)
         {
             FunctionRawData rawdata = new FunctionRawData(data);
             return rawdata.GetType().GetProperty(property).GetValue(rawdata).ToString().ToUpper().Contains(value.ToUpper());
         }
     }
 
-    public class FunctionData : IData
+    public class FunctionData : Data
     {
         public Comic Comic { get; set; }
         public Author Author { get; set; }
         public string Role { get; set; }
 
-        public IRawData Convert()
+        public override RawData Convert()
         {
             return new FunctionRawData(this);
         }
 
-        public string[] ToStringArr()
-        {
-            return Convert().PropValues();
-        }
-
-        public void Update(IRawData data)
+        public override void Update(RawData data)
         {
             throw new NotImplementedException();
         }
     }
 
-    public class FunctionRawData : IRawData
+    public class FunctionRawData : RawData
     {
         public FunctionRawData()
         {
@@ -102,7 +96,7 @@ namespace ComicStoreDb.Classes
             Role = data.Role;
         }
 
-        public FunctionRawData(IData data) : this((FunctionData)data)
+        public FunctionRawData(Data data) : this((FunctionData)data)
         {
         }
 
@@ -120,27 +114,14 @@ namespace ComicStoreDb.Classes
             };
         }
 
-        public string[] PropNames()
-        {
-            return GetType().GetProperties().Select(x => x.Name).ToArray();
-        }
-
-        public string[] PropValues()
-        {
-            return Array.ConvertAll(
-                                GetType().GetProperties().Select(x => x.GetValue(this)).ToArray(),
-                                x => x?.ToString() ?? string.Empty)
-                ;
-        }
-
-        public void ConvertFromStringArr(string[] arr)
+        public override void ConvertFromStringArr(string[] arr)
         {
             Author = arr[0];
             Comic = arr[1];
             Role = arr[2];
         }
 
-        public bool Check()
+        public override bool Check()
         {
             return true;
         }

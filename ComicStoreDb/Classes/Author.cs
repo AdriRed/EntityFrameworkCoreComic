@@ -4,18 +4,16 @@ using System.Linq;
 
 namespace ComicStoreDb.Classes
 {
-    public class Author : ITable
+    public class Author : Table
     {
-        public int Id { get; set; }
         private AuthorData data { get; set; }
-
         public string Name
         {
             get { return data.Name; }
             set { data.Name = value; }
         }
 
-        public string Nationality
+        public virtual Country Nationality
         {
             get { return data.Nationality; }
             set { data.Nationality = value; }
@@ -45,6 +43,7 @@ namespace ComicStoreDb.Classes
 
         public Author(AuthorRawData data) : this(data.Convert())
         {
+
         }
 
         public static bool Exist(string name)
@@ -72,41 +71,36 @@ namespace ComicStoreDb.Classes
             return separated;
         }
 
-        public IData GetData()
+        public override Data GetData()
         {
             return data;
         }
 
-        public void SetData(IData data)
+        public override void SetData(Data data)
         {
             this.data = (AuthorData)data;
         }
 
-        public bool Match(string property, string value)
+        public override bool Match(string property, string value)
         {
             AuthorRawData rawdata = new AuthorRawData(data);
             return rawdata.GetType().GetProperty(property).GetValue(rawdata).ToString().ToUpper().Contains(value.ToUpper());
         }
     }
 
-    public class AuthorData : IData
+    public class AuthorData : Data
     {
         public string Name { get; set; }
         public DateTime Birth { get; set; }
-        public string Nationality { get; set; }
+        public Country Nationality { get; set; }
         public ICollection<Function> Functions { get; set; }
 
-        public IRawData Convert()
+        public override RawData Convert()
         {
             return new AuthorRawData(this);
         }
 
-        public string[] ToStringArr()
-        {
-            return Convert().PropValues();
-        }
-
-        public void Update(IRawData rawdata)
+        public override void Update(RawData rawdata)
         {
             var data = ((AuthorRawData)rawdata).Convert();
 
@@ -116,7 +110,7 @@ namespace ComicStoreDb.Classes
         }
     }
 
-    public class AuthorRawData : IRawData
+    public class AuthorRawData : RawData
     {
         public AuthorRawData()
         {
@@ -135,11 +129,11 @@ namespace ComicStoreDb.Classes
         public AuthorRawData(AuthorData data)
         {
             Name = data.Name;
-            Nationality = data.Nationality;
+            Nationality = data.Nationality.Name;
             Birth = data.Birth.ToString("yyyy");
         }
 
-        public AuthorRawData(IData data) : this((AuthorData)data)
+        public AuthorRawData(Data data) : this((AuthorData)data)
         {
         }
 
@@ -152,7 +146,7 @@ namespace ComicStoreDb.Classes
             return new AuthorData()
             {
                 Name = Name,
-                Nationality = Nationality,
+                Nationality = ComicsContext.Instance.Countries.Where(x => x.Name == Nationality).FirstOrDefault(),
                 Birth = new DateTime(Int32.Parse(Birth), 1, 1)
             };
         }
@@ -162,35 +156,17 @@ namespace ComicStoreDb.Classes
             return Name;
         }
 
-        public string[] PropNames()
-        {
-            return GetType().GetProperties().Select(x => x.Name).ToArray();
-        }
-
-        public string[] PropValues()
-        {
-            var type = GetType();
-            //////////////////FALLA AQUI
-                var props = type.GetProperties();
-            //////////////////FALLA AQUI
-            var query1 = props.Select(x => x.GetValue(this));
-            var array = query1.ToArray();
-            var strarray = Array.ConvertAll(array, x => x?.ToString() ?? String.Empty);
-
-            return strarray;
-        }
-
-        public void ConvertFromStringArr(string[] arr)
+        public override void ConvertFromStringArr(string[] arr)
         {
             Name = arr[0];
             Birth = arr[1];
             Nationality = arr[2];
         }
 
-        public bool Check()
+        public override bool Check()
         {
             int foo;
-            return Int32.TryParse(Birth, out foo) && foo >= 0 && foo < 10000;
+            return Name.Length < 0 && Int32.TryParse(Birth, out foo) && foo >= 0 && foo < 10000 && Classes.Country.Exist(Nationality);
         }
 
         public override bool Equals(object obj)
