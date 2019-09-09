@@ -87,6 +87,8 @@ namespace ComicStoreDb
                 }
                 Console.Clear();
             } while (!exit);
+
+            context.Dispose();
         }
 
         private void UpdateContext()
@@ -197,11 +199,14 @@ namespace ComicStoreDb
                 }
                 else if (key.Key == ConsoleKey.Enter)
                 {
-                    exit = true;
-                    if (selection == propNames.Length)
-                        Location = MenuLocation.CheckData;
-                    else
-                        Location = MenuLocation.TableMenu;
+                    if (selection >= propNames.Length)
+                    {
+                        exit = true;
+                        if (selection == propNames.Length)
+                            Location = MenuLocation.CheckData;
+                        else
+                            Location = MenuLocation.TableMenu;
+                    }
                 }
                 else if (Char.IsLetterOrDigit(key.KeyChar) || Char.IsPunctuation(key.KeyChar) || Char.IsWhiteSpace(key.KeyChar))
                 {
