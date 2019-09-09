@@ -99,18 +99,12 @@ namespace ComicStoreDb
             }
             foreach (var item in context.Comics)
             {
-                //context.Entry(item).Reference(x => x.Category).Load();
                 context.Entry(item).Collection(x => x.Functions).Load();
             }
             foreach (var item in context.Categories)
             {
                 context.Entry(item).Collection(x => x.Comics).Load();
             }
-            //foreach (var item in context.Functions)
-            //{
-            //    context.Entry(item).Reference(x => x.Comic).Load();
-            //    context.Entry(item).Reference(x => x.Author).Load();
-            //}
         }
 
         private void AssignActions()
