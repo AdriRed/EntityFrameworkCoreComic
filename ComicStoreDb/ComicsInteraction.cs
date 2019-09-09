@@ -29,8 +29,8 @@ namespace ComicStoreDb
 
         public enum RegStyle
         {
-            HorizontalTable,
-            VerticalFields
+            VerticalFields,
+            HorizontalTable
         }
 
         private Action[,] actions;

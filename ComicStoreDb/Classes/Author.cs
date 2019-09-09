@@ -169,10 +169,15 @@ namespace ComicStoreDb.Classes
 
         public string[] PropValues()
         {
-            return Array.ConvertAll(
-                                GetType().GetProperties().Select(x => x.GetValue(this)).ToArray(),
-                                x => x?.ToString() ?? String.Empty)
-                ;
+            var type = GetType();
+            //////////////////FALLA AQUI
+                var props = type.GetProperties();
+            //////////////////FALLA AQUI
+            var query1 = props.Select(x => x.GetValue(this));
+            var array = query1.ToArray();
+            var strarray = Array.ConvertAll(array, x => x?.ToString() ?? String.Empty);
+
+            return strarray;
         }
 
         public void ConvertFromStringArr(string[] arr)
