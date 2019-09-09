@@ -1,5 +1,5 @@
 ﻿#define HOUSE
-//#undef HOUSE
+#undef HOUSE
 
 using ComicStoreDb.Classes;
 using Microsoft.EntityFrameworkCore;

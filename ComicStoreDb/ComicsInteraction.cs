@@ -132,6 +132,8 @@ namespace ComicStoreDb
             statistics = new Action[4];
             statistics[0] = new Action(ComicsPerCategory);
             statistics[1] = new Action(ComicsPerAuthor);
+            statistics[2] = new Action(LongestComics);
+            statistics[3] = new Action(AuthorsPerNationality);
         }
 
         #region Generic
@@ -758,9 +760,13 @@ namespace ComicStoreDb
                         group function by author into authorGroup
                         select authorGroup;
 
-            foreach (var item in query)
+            foreach (var author in query)
             {
-                Console.WriteLine(item.Key.Name + ": " + item.Count());
+                Console.WriteLine(author.Key.Name + ": " + author.Count());
+                foreach (var comic in author)
+                {
+                    Console.WriteLine("\t" + comic.Comic.Title + " as " + comic.Role);
+                }
             }
 
             Console.ReadKey(true);
@@ -768,10 +774,34 @@ namespace ComicStoreDb
 
         private void LongestComics()
         {
+            var query = (from comic in context.Comics
+                        orderby comic.Pages descending
+                        select comic).Take(3);
+
+            foreach (var item in query)
+            {
+                Console.WriteLine(item.Title + ": " + item.Pages);
+            }
+
+            Console.ReadKey(true);
         }
 
         private void AuthorsPerNationality()
         {
+            var query = from author in context.Authors
+                        group author by author.Nationality into nationality
+                        select nationality;
+
+            foreach (var nationality in query)
+            {
+                Console.WriteLine(nationality.Key + ": " + nationality.Count());
+                foreach (var author in nationality)
+                {
+                    Console.WriteLine("\t" + author.Name);
+                }
+            }
+
+            Console.ReadKey(true);
         }
 
         #endregion Statistics
