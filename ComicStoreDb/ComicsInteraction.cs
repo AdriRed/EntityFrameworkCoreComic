@@ -817,13 +817,15 @@ namespace ComicStoreDb
             int id;
             Console.Clear();
             string field = ChoosePropFindBy<AuthorRawData>();
+            if (Location == MenuLocation.MainMenu)
+                return;
             var reg = ChooseReg<AuthorRawData>(field, out id);
             if (Location == MenuLocation.SelectedData)
                 if (EnsureDelete(reg))
                 {
                     Author target = context.Authors.Find(id);
 
-                    if (target.Functions.Count > 0)
+                    if (target.Functions.Count == 0)
                     {
                         context.Authors.Remove(target);
 
@@ -849,6 +851,8 @@ namespace ComicStoreDb
             int id;
             Console.Clear();
             string field = ChoosePropFindBy<ComicRawData>();
+            if (Location == MenuLocation.MainMenu)
+                return;
             var reg = ChooseReg<ComicRawData>(field, out id);
             if (Location == MenuLocation.SelectedData)
                 if (EnsureDelete(reg))
@@ -870,12 +874,14 @@ namespace ComicStoreDb
             int id;
             Console.Clear();
             string field = ChoosePropFindBy<CategoryRawData>();
+            if (Location == MenuLocation.MainMenu)
+                return;
             var reg = ChooseReg<CategoryRawData>(field, out id);
             if (Location == MenuLocation.SelectedData)
                 if (EnsureDelete(reg))
                 {
                     Category target = context.Categories.Find(id);
-                    if (target.Comics.Count > 0)
+                    if (target.Comics.Count == 0)
                     {
                         context.Categories.Remove(target);
 
@@ -900,13 +906,15 @@ namespace ComicStoreDb
             int id;
             Console.Clear();
             string field = ChoosePropFindBy<AuthorRawData>();
+            if (Location == MenuLocation.MainMenu)
+                return;
             var reg = ChooseReg<AuthorRawData>(field, out id);
             if (Location == MenuLocation.SelectedData)
                 if (EnsureDelete(reg))
                 {
                     PublishingHouse target = context.PublishingHouses.Find(id);
 
-                    if (target.Comics.Count > 0)
+                    if (target.Comics.Count == 0)
                     {
                         context.PublishingHouses.Remove(target);
 
@@ -929,14 +937,16 @@ namespace ComicStoreDb
         {
             int id;
             Console.Clear();
-            string field = ChoosePropFindBy<ComicRawData>();
-            var reg = ChooseReg<ComicRawData>(field, out id);
+            string field = ChoosePropFindBy<CountryRawData>();
+            if (Location == MenuLocation.MainMenu)
+                return;
+            var reg = ChooseReg<CountryRawData>(field, out id);
             if (Location == MenuLocation.SelectedData)
                 if (EnsureDelete(reg))
                 {
                     Country target = context.Countries.Find(id);
 
-                    if (target.Authors.Count > 0 && target.PublishingHouses.Count > 0)
+                    if (target.Authors.Count == 0 && target.PublishingHouses.Count == 0)
                     {
                         context.Countries.Remove(target);
 

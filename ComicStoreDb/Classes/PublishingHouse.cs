@@ -69,7 +69,7 @@ namespace ComicStoreDb.Classes
 
         public override RawData Convert()
         {
-            return new ComicRawData(this);
+            return new PublishingHouseRawData(this);
         }
 
         public override void Update(RawData rawdata)
@@ -124,6 +124,18 @@ namespace ComicStoreDb.Classes
                 Name = Name,
                 Country = ComicsContext.Instance.Countries.Where(x => x.Name.ToUpper() == Country.ToUpper()).FirstOrDefault()
             };
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is PublishingHouseRawData data &&
+                   Name == data.Name &&
+                   Country == data.Country;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Name, Country);
         }
     }
 }

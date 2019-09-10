@@ -135,5 +135,17 @@ namespace ComicStoreDb.Classes
                 Code = Code
             };
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CountryRawData data &&
+                   Name == data.Name &&
+                   Code == data.Code;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Name, Code);
+        }
     }
 }

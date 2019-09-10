@@ -29,9 +29,11 @@ namespace ComicStoreDb.Migrations
 
                     b.Property<string>("Name");
 
-                    b.Property<string>("Nationality");
+                    b.Property<int?>("NationalityId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NationalityId");
 
                     b.ToTable("Authors");
                 });
@@ -65,13 +67,32 @@ namespace ComicStoreDb.Migrations
 
                     b.Property<DateTime>("PublicationDate");
 
+                    b.Property<int?>("PublishingHouseId");
+
                     b.Property<string>("Title");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("PublishingHouseId");
+
                     b.ToTable("Comics");
+                });
+
+            modelBuilder.Entity("ComicStoreDb.Classes.Country", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Code");
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Countries");
                 });
 
             modelBuilder.Entity("ComicStoreDb.Classes.Function", b =>
@@ -95,11 +116,39 @@ namespace ComicStoreDb.Migrations
                     b.ToTable("Functions");
                 });
 
+            modelBuilder.Entity("ComicStoreDb.Classes.PublishingHouse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int?>("CountryId");
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryId");
+
+                    b.ToTable("PublishingHouses");
+                });
+
+            modelBuilder.Entity("ComicStoreDb.Classes.Author", b =>
+                {
+                    b.HasOne("ComicStoreDb.Classes.Country", "Nationality")
+                        .WithMany("Authors")
+                        .HasForeignKey("NationalityId");
+                });
+
             modelBuilder.Entity("ComicStoreDb.Classes.Comic", b =>
                 {
                     b.HasOne("ComicStoreDb.Classes.Category", "Category")
                         .WithMany("Comics")
                         .HasForeignKey("CategoryId");
+
+                    b.HasOne("ComicStoreDb.Classes.PublishingHouse", "PublishingHouse")
+                        .WithMany("Comics")
+                        .HasForeignKey("PublishingHouseId");
                 });
 
             modelBuilder.Entity("ComicStoreDb.Classes.Function", b =>
@@ -111,6 +160,13 @@ namespace ComicStoreDb.Migrations
                     b.HasOne("ComicStoreDb.Classes.Comic", "Comic")
                         .WithMany("Functions")
                         .HasForeignKey("ComicId");
+                });
+
+            modelBuilder.Entity("ComicStoreDb.Classes.PublishingHouse", b =>
+                {
+                    b.HasOne("ComicStoreDb.Classes.Country", "Country")
+                        .WithMany("PublishingHouses")
+                        .HasForeignKey("CountryId");
                 });
 #pragma warning restore 612, 618
         }
