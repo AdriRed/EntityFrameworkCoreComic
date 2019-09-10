@@ -107,6 +107,15 @@ namespace ComicStoreDb
             {
                 context.Entry(item).Collection(x => x.Comics).Load();
             }
+            foreach (var item in context.Countries)
+            {
+                context.Entry(item).Collection(x => x.PublishingHouses).Load();
+                context.Entry(item).Collection(x => x.Authors).Load();
+            }
+            foreach (var item in context.PublishingHouses)
+            {
+                context.Entry(item).Collection(x => x.Comics).Load();
+            }
         }
 
         private void AssignActions()
@@ -735,6 +744,62 @@ namespace ComicStoreDb
             }
         }
 
+        private void UpdatePublishingHouse()
+        {
+            int id;
+            Console.Clear();
+            var data = FindData<PublishingHouseRawData>(out id);
+            if (Location != MenuLocation.SelectedData)
+                return;
+            ModifyData(data);
+            if (Location == MenuLocation.CheckData)
+            {
+                if (data.Check())
+                {
+                    PublishingHouse target = context.PublishingHouses.Find(id);
+
+                    target.GetData().Update(data);
+
+                    context.SaveChanges();
+                    Console.Clear();
+                    Console.WriteLine("Updated " + data.Name);
+                }
+                else
+                {
+                    Console.Clear();
+                    Console.WriteLine("ERROR");
+                }
+                Console.ReadKey(true);
+            }
+        }
+        private void UpdateCoutnry()
+        {
+            int id;
+            Console.Clear();
+            var data = FindData<CountryRawData>(out id);
+            if (Location != MenuLocation.SelectedData)
+                return;
+            ModifyData(data);
+            if (Location == MenuLocation.CheckData)
+            {
+                if (data.Check())
+                {
+                    Country target = context.Countries.Find(id);
+
+                    target.GetData().Update(data);
+
+                    context.SaveChanges();
+                    Console.Clear();
+                    Console.WriteLine("Updated " + data.Name);
+                }
+                else
+                {
+                    Console.Clear();
+                    Console.WriteLine("ERROR");
+                }
+                Console.ReadKey(true);
+            }
+        }
         #endregion Update
 
         #region Delete
@@ -750,12 +815,24 @@ namespace ComicStoreDb
                 {
                     Author target = context.Authors.Find(id);
 
-                    context.Functions.RemoveRange(context.Functions.Where(x => x.Author == target));
-                    context.Authors.Remove(target);
+                    if (target.Functions.Count > 0)
+                    {
+                        context.Authors.Remove(target);
 
-                    context.SaveChanges();
-                    Console.WriteLine("Deleted " + target.Name);
-                    Console.ReadKey(true);
+                        context.SaveChanges();
+                        Console.WriteLine("Deleted " + target.Name);
+                        Console.ReadKey(true);
+                    } else
+                    {
+                        Console.WriteLine("ERROR");
+                        Console.WriteLine($"Some comics already have this Author ({target.Name})");
+                        foreach (var item in target.Functions)
+                        {
+                            var data = new FunctionRawData(target.GetData());
+                            Console.WriteLine($"\t {data.Comic} as {data.Role}");
+                        }
+                    }
+                    
                 }
         }
 
@@ -770,6 +847,7 @@ namespace ComicStoreDb
                 {
                     Comic target = context.Comics.Find(id);
 
+                    //Cascade ok
                     context.Functions.RemoveRange(context.Functions.Where(x => x.Comic == target));
                     context.Comics.Remove(target);
 
@@ -789,11 +867,95 @@ namespace ComicStoreDb
                 if (EnsureDelete(reg))
                 {
                     Category target = context.Categories.Find(id);
+                    if (target.Comics.Count > 0)
+                    {
+                        context.Categories.Remove(target);
 
-                    context.Categories.Remove(target);
+                        context.SaveChanges();
+                        Console.WriteLine("Deleted " + target.Name);
 
-                    context.SaveChanges();
-                    Console.WriteLine("Deleted " + target.Name);
+                    } else
+                    {
+                        Console.WriteLine("ERROR");
+                        Console.WriteLine($"Some comics already have this category ({target.Name})!");
+                        foreach (var item in target.Comics)
+                        {
+                            Console.WriteLine($"\t{item.Title}");
+                        }
+                    }
+                    Console.ReadKey(true);
+                }
+        }
+
+        private void DeletePublishingHouse()
+        {
+            int id;
+            Console.Clear();
+            string field = ChoosePropFindBy<AuthorRawData>();
+            var reg = ChooseReg<AuthorRawData>(field, out id);
+            if (Location == MenuLocation.SelectedData)
+                if (EnsureDelete(reg))
+                {
+                    PublishingHouse target = context.PublishingHouses.Find(id);
+
+                    if (target.Comics.Count > 0)
+                    {
+                        context.PublishingHouses.Remove(target);
+
+                        context.SaveChanges();
+                        Console.WriteLine("Deleted " + target.Name);
+                    } else
+                    {
+                        Console.WriteLine("ERROR");
+                        Console.WriteLine("Some comics already have this Publishing House");
+                        foreach (var item in target.Comics)
+                        {
+                            Console.WriteLine($"\t{item.Title}");
+                        }
+                    }
+                    Console.ReadKey(true);
+                }
+        }
+
+        private void DeleteCountry()
+        {
+            int id;
+            Console.Clear();
+            string field = ChoosePropFindBy<ComicRawData>();
+            var reg = ChooseReg<ComicRawData>(field, out id);
+            if (Location == MenuLocation.SelectedData)
+                if (EnsureDelete(reg))
+                {
+                    Country target = context.Countries.Find(id);
+
+                    if (target.Authors.Count > 0 && target.PublishingHouses.Count > 0)
+                    {
+                        context.Countries.Remove(target);
+
+                        context.SaveChanges();
+                        Console.WriteLine("Deleted " + target.Name);
+                    }
+                    else
+                    {
+                        Console.WriteLine("ERROR");
+                        if (target.Authors.Count > 0)
+                        {
+                            Console.WriteLine($"Some authors are from this Country ({target.Name})");
+                            foreach (var item in target.Authors)
+                            {
+                                Console.WriteLine($"\t{item.Name}");
+                            }
+                        }
+
+                        if (target.Authors.Count > 0)
+                        {
+                            Console.WriteLine($"Some publishing houses are from this Country ({target.Name})");
+                            foreach (var item in target.PublishingHouses)
+                            {
+                                Console.WriteLine($"\t{item.Name}");
+                            }
+                        }
+                    }
                     Console.ReadKey(true);
                 }
         }

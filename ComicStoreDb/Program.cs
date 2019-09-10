@@ -4,8 +4,9 @@
     {
         public static void Main(string[] args)
         {
-            //TODO: Update IData
-            //TODO: PublishingHouse - Collections and Other data
+            //TODO: Create functions
+            //TODO: Remove cascade delete
+            //TODO: Full Generic
 
             ComicsInteraction comicsInteraction = new ComicsInteraction();
             comicsInteraction.Start();

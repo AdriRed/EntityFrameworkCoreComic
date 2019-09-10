@@ -33,6 +33,12 @@ namespace ComicStoreDb.Classes
             set { data.Country = value; }
         }
 
+        public virtual ICollection<Comic> Comics
+        {
+            get { return data.Comics; }
+            set { data.Comics = value; }
+        }
+
         public override Data GetData()
         {
             return data;
@@ -59,10 +65,11 @@ namespace ComicStoreDb.Classes
     {
         public string Name { get; set; }
         public Country Country { get; set; }
+        public ICollection<Comic> Comics { get; set; }
 
         public override RawData Convert()
         {
-            throw new NotImplementedException();
+            return new ComicRawData(this);
         }
 
         public override void Update(RawData rawdata)
