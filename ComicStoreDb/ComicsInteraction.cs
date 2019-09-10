@@ -92,7 +92,6 @@ namespace ComicStoreDb
 
             context.Dispose();
         }
-
         private void UpdateContext()
         {
             foreach (var item in context.Authors)
@@ -117,10 +116,9 @@ namespace ComicStoreDb
                 context.Entry(item).Collection(x => x.Comics).Load();
             }
         }
-
         private void AssignActions()
         {
-            actions = new Action[4, 3];
+            actions = new Action[4, 5];
             actions[0, 0] = new Action(AddAuthor);
             actions[1, 0] = new Action(ReadAuthors);
             actions[2, 0] = new Action(UpdateAuthor);
@@ -135,6 +133,16 @@ namespace ComicStoreDb
             actions[1, 2] = new Action(ReadComics);
             actions[2, 2] = new Action(UpdateComic);
             actions[3, 2] = new Action(DeleteComic);
+
+            actions[0, 3] = new Action(AddPublishingHouse);
+            actions[1, 3] = new Action(ReadPublishingHouses);
+            actions[2, 3] = new Action(UpdatePublishingHouse);
+            actions[3, 3] = new Action(DeletePublishingHouse);
+
+            actions[0, 4] = new Action(AddCountry);
+            actions[1, 4] = new Action(ReadCountries);
+            actions[2, 4] = new Action(UpdateCountry);
+            actions[3, 4] = new Action(DeleteCountry);
 
             statistics = new Action[4];
             statistics[0] = new Action(ComicsPerCategory);
@@ -772,7 +780,7 @@ namespace ComicStoreDb
                 Console.ReadKey(true);
             }
         }
-        private void UpdateCoutnry()
+        private void UpdateCountry()
         {
             int id;
             Console.Clear();
