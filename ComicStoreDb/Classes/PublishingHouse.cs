@@ -23,17 +23,18 @@ namespace ComicStoreDb.Classes
 
         public override Data GetData()
         {
-            throw new NotImplementedException();
+            return data;
         }
 
         public override void SetData(Data data)
         {
-            throw new NotImplementedException();
+            this.data = (PublishingHouseData)data;
         }
 
         public override bool Match(string property, string value)
         {
-            throw new NotImplementedException();
+            PublishingHouseRawData rawdata = new PublishingHouseRawData(data);
+            return rawdata.GetType().GetProperty(property).GetValue(rawdata).ToString().ToUpper().Contains(value.ToUpper());
         }
 
         public static bool Exist(string name)
@@ -46,11 +47,51 @@ namespace ComicStoreDb.Classes
     {
         public string Name { get; set; }
         public Country Country { get; set; }
+
+        public override RawData Convert()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Update(RawData rawdata)
+        {
+            var data = (PublishingHouseRawData)rawdata;
+            Name = data.Name;
+            Country = ComicsContext.Instance.Countries.Where(x => x.Name.ToUpper() == data.Country.ToUpper()).FirstOrDefault();
+        }
     }
 
     public class PublishingHouseRawData : RawData
     {
+        public PublishingHouseRawData()
+        {
+            Name = String.Empty;
+            Country = String.Empty;
+        }
+
+        public PublishingHouseRawData(PublishingHouseData data)
+        {
+            Name = data.Name;
+            Country = data.Country.Name;
+        }
+        public PublishingHouseRawData(string name, string country)
+        {
+            Name = name;
+            Country = country;
+        }
+
         public string Name { get; set; }
         public string Country { get; set; }
+
+        public override bool Check()
+        {
+            return Name.Length > 0 && Classes.Country.Exist(Country);
+        }
+
+        public override void ConvertFromStringArr(string[] arr)
+        {
+            Name = arr[0];
+            Country = arr[1];
+        }
     }
 }

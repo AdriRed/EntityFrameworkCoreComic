@@ -40,7 +40,8 @@ namespace ComicStoreDb.Classes
 
         public override bool Match(string property, string value)
         {
-            throw new NotImplementedException();
+            CountryRawData rawdata = new CountryRawData(data);
+            return rawdata.GetType().GetProperty(property).GetValue(rawdata).ToString().ToUpper().Contains(value.ToUpper());
         }
 
         public override void SetData(Data data)
@@ -60,11 +61,52 @@ namespace ComicStoreDb.Classes
         public string Code { get; set; }
         public ICollection<Author> Authors { get; set; }
         public ICollection<PublishingHouse> PublishingHouses { get; set; }
+
+        public override RawData Convert()
+        {
+            return new CountryRawData(this);
+        }
+
+        public override void Update(RawData rawdata)
+        {
+            var data = (CountryRawData)rawdata;
+            Name = data.Name;
+            Code = data.Code;
+        }
     }
 
     public class CountryRawData : RawData
     {
+        public CountryRawData()
+        {
+            Name = String.Empty;
+            Code = String.Empty;
+        }
+
+        public CountryRawData(CountryData data)
+        {
+            Name = data.Name;
+            Code = data.Code;
+        }
+
+        public CountryRawData(string name, string code)
+        {
+            Name = name;
+            Code = code;
+        }
+
         public string Name { get; set; }
         public string Code { get; set; }
+
+        public override bool Check()
+        {
+            return Name.Length > 0 && Code.Length > 0;
+        }
+
+        public override void ConvertFromStringArr(string[] arr)
+        {
+            Name = arr[0];
+            Code = arr[1];
+        }
     }
 }
