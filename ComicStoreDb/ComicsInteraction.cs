@@ -24,7 +24,9 @@ namespace ComicStoreDb
         {
             Authors,
             Categories,
-            Comics
+            Comics,
+            PublishingHouses,
+            Countries
         }
 
         public enum RegStyle
@@ -530,6 +532,45 @@ namespace ComicStoreDb
             }
         }
 
+        private void AddPublishingHouse()
+        {
+            var data = AddData<PublishingHouseRawData>();
+            Console.Clear();
+            if (Location == MenuLocation.CheckData)
+            {
+                if (data.Check())
+                {
+                    PublishingHouse p = new PublishingHouse(data);
+                    context.PublishingHouses.Add(p);
+                    Console.WriteLine("Added " + p.Name);
+                }
+                else
+                {
+                    Console.WriteLine("ERROR");
+                }
+                Console.ReadKey(true);
+            }
+        }
+
+        private void AddCountry()
+        {
+            var data = AddData<CountryRawData>();
+            Console.Clear();
+            if (Location == MenuLocation.CheckData)
+            {
+                if (data.Check())
+                {
+                    Country c = new Country(data);
+                    context.Countries.Add(c);
+                    Console.WriteLine("Added " + c.Name);
+                } else
+                {
+                    Console.WriteLine("ERROR");
+                }
+                Console.ReadKey(true);
+            }
+        }
+
         #endregion Add
 
         #region Read
@@ -565,6 +606,30 @@ namespace ComicStoreDb
             foreach (var single in context.Categories)
             {
                 data.Add(new CategoryRawData(single.GetData()));
+            }
+
+            ReadData(data);
+        }
+
+        private void ReadPublishingHouses()
+        {
+            Console.Clear();
+            List<PublishingHouseRawData> data = new List<PublishingHouseRawData>();
+            foreach (var single in context.PublishingHouses)
+            {
+                data.Add(new PublishingHouseRawData(single.GetData()));
+            }
+
+            ReadData(data);
+        }
+
+        private void ReadCountries()
+        {
+            Console.Clear();
+            List<CountryRawData> data = new List<CountryRawData>();
+            foreach (var single in context.Countries)
+            {
+                data.Add(new CountryRawData(single.GetData()));
             }
 
             ReadData(data);

@@ -61,7 +61,7 @@ namespace ComicStoreDb.Classes
             this.data = data;
         }
 
-        public Comic(ComicRawData data) : this(data.Convert())
+        public Comic(ComicRawData data) : this((ComicData)data.Convert())
         {
         }
 
@@ -105,7 +105,7 @@ namespace ComicStoreDb.Classes
 
         public override void Update(RawData rawdata)
         {
-            var data = ((ComicRawData)rawdata).Convert();
+            var data = (ComicData)rawdata.Convert();
 
             Title = data.Title;
             Description = data.Description;
@@ -170,7 +170,7 @@ namespace ComicStoreDb.Classes
         public string Category { get; set; }
         public string PublishingHouse { get; set; }
 
-        public ComicData Convert()
+        public override Data Convert()
         {
             return new ComicData()
             {
@@ -178,8 +178,8 @@ namespace ComicStoreDb.Classes
                 Description = Description,
                 PublicationDate = PublicationDate.Split('/').ToInt().ToDate(),
                 Pages = Int32.Parse(Pages),
-                Category = ComicsContext.Instance.Categories.Where(x => x.Name == Category).FirstOrDefault(),
-                PublishingHouse = ComicsContext.Instance.PublishingHouses.Where(x => x.Name == Category).FirstOrDefault()
+                Category = ComicsContext.Instance.Categories.Where(x => x.Name.ToUpper() == Category.ToUpper()).FirstOrDefault(),
+                PublishingHouse = ComicsContext.Instance.PublishingHouses.Where(x => x.Name.ToUpper() == PublicationDate.ToUpper()).FirstOrDefault()
             };
         }
 

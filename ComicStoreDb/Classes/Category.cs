@@ -36,7 +36,7 @@ namespace ComicStoreDb.Classes
             this.data = data;
         }
 
-        public Category(CategoryRawData data) : this(data.Convert())
+        public Category(CategoryRawData data) : this((CategoryData)data.Convert())
         {
         }
 
@@ -76,7 +76,7 @@ namespace ComicStoreDb.Classes
 
         public override void Update(RawData rawdata)
         {
-            var data = ((CategoryRawData)rawdata).Convert();
+            var data = (CategoryData)rawdata.Convert();
 
             Name = data.Name;
             Description = data.Description;
@@ -110,7 +110,7 @@ namespace ComicStoreDb.Classes
         public string Name { get; set; }
         public string Description { get; set; }
 
-        public CategoryData Convert()
+        public override Data Convert()
         {
             return new CategoryData()
             {

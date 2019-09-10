@@ -26,6 +26,8 @@ namespace ComicStoreDb
             Author,
             Category,
             Comic,
+            PublishingHouse,
+            Country,
             Back
         }
 

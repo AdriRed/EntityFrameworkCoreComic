@@ -24,5 +24,7 @@ namespace ComicStoreDb
         }
         public abstract void ConvertFromStringArr(string[] arr);
         public abstract bool Check();
+
+        public abstract Data Convert();
     }
 }

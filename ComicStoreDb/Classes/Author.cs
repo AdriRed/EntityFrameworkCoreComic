@@ -41,7 +41,7 @@ namespace ComicStoreDb.Classes
             this.data = data;
         }
 
-        public Author(AuthorRawData data) : this(data.Convert())
+        public Author(AuthorRawData data) : this((AuthorData)data.Convert())
         {
 
         }
@@ -102,7 +102,7 @@ namespace ComicStoreDb.Classes
 
         public override void Update(RawData rawdata)
         {
-            var data = ((AuthorRawData)rawdata).Convert();
+            var data = (AuthorData)rawdata.Convert();
 
             Name = data.Name;
             Birth = data.Birth;
@@ -141,7 +141,7 @@ namespace ComicStoreDb.Classes
         public string Birth { get; set; }
         public string Nationality { get; set; }
 
-        public AuthorData Convert()
+        public override Data Convert()
         {
             return new AuthorData()
             {

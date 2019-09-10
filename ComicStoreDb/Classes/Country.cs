@@ -7,6 +7,19 @@ namespace ComicStoreDb.Classes
 {
     public class Country : Table
     {
+        public Country()
+        {
+            data = new CountryData();
+        }
+        public Country(CountryData data) : this()
+        {
+            this.data = data;
+        }
+        public Country(CountryRawData data) : this((CountryData)data.Convert())
+        {
+
+        }
+
         private CountryData data { get; set; }
 
         public string Name
@@ -83,16 +96,21 @@ namespace ComicStoreDb.Classes
             Code = String.Empty;
         }
 
-        public CountryRawData(CountryData data)
+        public CountryRawData(CountryData data) : this()
         {
             Name = data.Name;
             Code = data.Code;
         }
 
-        public CountryRawData(string name, string code)
+        public CountryRawData(string name, string code) : this()
         {
             Name = name;
             Code = code;
+        }
+
+        public CountryRawData(Data data) : this((CountryData)data)
+        {
+
         }
 
         public string Name { get; set; }
@@ -107,6 +125,15 @@ namespace ComicStoreDb.Classes
         {
             Name = arr[0];
             Code = arr[1];
+        }
+
+        public override Data Convert()
+        {
+            return new CountryData()
+            {
+                Name = Name,
+                Code = Code
+            };
         }
     }
 }

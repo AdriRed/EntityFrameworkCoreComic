@@ -7,6 +7,18 @@ namespace ComicStoreDb.Classes
 {
     public class PublishingHouse : Table
     {
+        public PublishingHouse()
+        {
+            data = new PublishingHouseData();
+        }
+        public PublishingHouse(PublishingHouseData data) : this()
+        {
+            this.data = data;
+        }
+        public PublishingHouse(PublishingHouseRawData data) : this((PublishingHouseData)data.Convert())  
+        {
+
+        }
         private PublishingHouseData data { get; set; }
 
         public string Name
@@ -69,15 +81,19 @@ namespace ComicStoreDb.Classes
             Country = String.Empty;
         }
 
-        public PublishingHouseRawData(PublishingHouseData data)
+        public PublishingHouseRawData(PublishingHouseData data) : this()
         {
             Name = data.Name;
             Country = data.Country.Name;
         }
-        public PublishingHouseRawData(string name, string country)
+        public PublishingHouseRawData(string name, string country) : this()
         {
             Name = name;
             Country = country;
+        }
+        public PublishingHouseRawData(Data data) : this((PublishingHouseData)data)
+        {
+
         }
 
         public string Name { get; set; }
@@ -92,6 +108,15 @@ namespace ComicStoreDb.Classes
         {
             Name = arr[0];
             Country = arr[1];
+        }
+
+        public override Data Convert()
+        {
+            return new PublishingHouseData()
+            {
+                Name = Name,
+                Country = ComicsContext.Instance.Countries.Where(x => x.Name.ToUpper() == Country.ToUpper()).FirstOrDefault()
+            };
         }
     }
 }

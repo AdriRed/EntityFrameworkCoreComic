@@ -35,7 +35,7 @@ namespace ComicStoreDb.Classes
             this.data = data;
         }
 
-        public Function(FunctionRawData data) : this(data.Convert())
+        public Function(FunctionRawData data) : this((FunctionData)data.Convert())
         {
         }
 
@@ -104,7 +104,7 @@ namespace ComicStoreDb.Classes
         public string Comic { get; set; }
         public string Role { get; set; }
 
-        public FunctionData Convert()
+        public override Data Convert()
         {
             return new FunctionData()
             {
@@ -138,5 +138,6 @@ namespace ComicStoreDb.Classes
         {
             return HashCode.Combine(Author, Comic, Role);
         }
+
     }
 }
