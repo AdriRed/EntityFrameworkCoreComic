@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace ComicStoreDb.Classes
@@ -210,7 +209,7 @@ namespace ComicStoreDb.Classes
             return Title.Length < 0 &&
                 DateTime.TryParse(PublicationDate, out date) &&
                 Int32.TryParse(Pages, out pages) &&
-                Classes.PublishingHouse.Exist(PublishingHouse) && 
+                Classes.PublishingHouse.Exist(PublishingHouse) &&
                 Classes.Category.Exist(Category) &&
                 pages > 0;
         }

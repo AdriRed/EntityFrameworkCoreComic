@@ -6,7 +6,9 @@
         {
             return Convert().PropValues();
         }
+
         public abstract void Update(RawData rawdata);
+
         public abstract RawData Convert();
     }
 }

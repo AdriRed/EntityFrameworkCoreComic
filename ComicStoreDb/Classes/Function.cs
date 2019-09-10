@@ -138,6 +138,5 @@ namespace ComicStoreDb.Classes
         {
             return HashCode.Combine(Author, Comic, Role);
         }
-
     }
 }

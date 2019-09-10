@@ -7,6 +7,7 @@ namespace ComicStoreDb.Classes
     public class Author : Table
     {
         private AuthorData data { get; set; }
+
         public string Name
         {
             get { return data.Name; }
@@ -43,7 +44,6 @@ namespace ComicStoreDb.Classes
 
         public Author(AuthorRawData data) : this((AuthorData)data.Convert())
         {
-
         }
 
         public static bool Exist(string name)

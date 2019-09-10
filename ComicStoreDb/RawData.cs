@@ -14,7 +14,7 @@ namespace ComicStoreDb
         {
             var type = GetType();
             //////////////////FALLA AQUI
-                var props = type.GetProperties();
+            var props = type.GetProperties();
             //////////////////FALLA AQUI
             var query = props.Select(x => x.GetValue(this));
             var array = query.ToArray();
@@ -22,11 +22,15 @@ namespace ComicStoreDb
 
             return strarray;
         }
+
         public abstract void ConvertFromStringArr(string[] arr);
+
         public abstract bool Check();
 
         public abstract Data Convert();
+
         public abstract override bool Equals(object obj);
+
         public abstract override int GetHashCode();
     }
 }

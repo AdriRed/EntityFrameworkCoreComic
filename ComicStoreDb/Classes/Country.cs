@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ComicStoreDb.Classes
 {
@@ -11,13 +10,14 @@ namespace ComicStoreDb.Classes
         {
             data = new CountryData();
         }
+
         public Country(CountryData data) : this()
         {
             this.data = data;
         }
+
         public Country(CountryRawData data) : this((CountryData)data.Convert())
         {
-
         }
 
         private CountryData data { get; set; }
@@ -39,7 +39,7 @@ namespace ComicStoreDb.Classes
             get { return data.Authors; }
             set { data.Authors = value; }
         }
-        
+
         public virtual ICollection<PublishingHouse> PublishingHouses
         {
             get { return data.PublishingHouses; }
@@ -110,7 +110,6 @@ namespace ComicStoreDb.Classes
 
         public CountryRawData(Data data) : this((CountryData)data)
         {
-
         }
 
         public string Name { get; set; }

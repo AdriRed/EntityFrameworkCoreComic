@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ComicStoreDb.Classes
 {
@@ -11,14 +10,16 @@ namespace ComicStoreDb.Classes
         {
             data = new PublishingHouseData();
         }
+
         public PublishingHouse(PublishingHouseData data) : this()
         {
             this.data = data;
         }
-        public PublishingHouse(PublishingHouseRawData data) : this((PublishingHouseData)data.Convert())  
-        {
 
+        public PublishingHouse(PublishingHouseRawData data) : this((PublishingHouseData)data.Convert())
+        {
         }
+
         private PublishingHouseData data { get; set; }
 
         public string Name
@@ -93,14 +94,15 @@ namespace ComicStoreDb.Classes
             Name = data.Name;
             Country = data.Country.Name;
         }
+
         public PublishingHouseRawData(string name, string country) : this()
         {
             Name = name;
             Country = country;
         }
+
         public PublishingHouseRawData(Data data) : this((PublishingHouseData)data)
         {
-
         }
 
         public string Name { get; set; }

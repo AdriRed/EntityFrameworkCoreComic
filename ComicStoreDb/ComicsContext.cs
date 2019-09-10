@@ -29,6 +29,6 @@ namespace ComicStoreDb
         public DbSet<Comic> Comics { get; set; }
         public DbSet<Function> Functions { get; set; }
         public DbSet<Country> Countries { get; set; }
-        public DbSet<PublishingHouse> PublishingHouses{ get; set; }
+        public DbSet<PublishingHouse> PublishingHouses { get; set; }
     }
 }
