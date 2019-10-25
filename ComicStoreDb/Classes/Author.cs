@@ -166,7 +166,7 @@ namespace ComicStoreDb.Classes
         public override bool Check()
         {
             int foo;
-            return Name.Length < 0 && Int32.TryParse(Birth, out foo) && foo >= 0 && foo < 10000 && Classes.Country.Exist(Nationality);
+            return Name.Length > 0 && Int32.TryParse(Birth, out foo) && foo >= 0 && foo < 10000 && Classes.Country.Exist(Nationality);
         }
 
         public override bool Equals(object obj)

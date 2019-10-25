@@ -206,7 +206,7 @@ namespace ComicStoreDb.Classes
                     return false;
             }
 
-            return Title.Length < 0 &&
+            return Title.Length > 0 &&
                 DateTime.TryParse(PublicationDate, out date) &&
                 Int32.TryParse(Pages, out pages) &&
                 Classes.PublishingHouse.Exist(PublishingHouse) &&

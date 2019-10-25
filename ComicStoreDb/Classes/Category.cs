@@ -127,7 +127,7 @@ namespace ComicStoreDb.Classes
 
         public override bool Check()
         {
-            return Name.Length < 0;
+            return Name.Length > 0;
         }
 
         public override bool Equals(object obj)

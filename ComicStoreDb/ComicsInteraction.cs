@@ -52,6 +52,7 @@ namespace ComicStoreDb
             PublishingHouses,
             Countries
         }
+
         private void AssignActions()
         {
             actions = new Action[4, 5];
@@ -156,6 +157,7 @@ namespace ComicStoreDb
 
             context.Dispose();
         }
+
         #region Generic
 
         private string ChoosePropFindBy<T>() where T : RawData, new()
@@ -418,6 +420,7 @@ namespace ComicStoreDb
 
             data.ConvertFromStringArr(propValues);
         }
+
         public void PrintReg(RawData rawData, string pre, string post, RegStyle style)
         {
             var propVals = rawData.PropValues();
@@ -472,6 +475,7 @@ namespace ComicStoreDb
 
             Console.ReadKey(true);
         }
+
         #endregion Generic
 
         #region Add
@@ -551,6 +555,7 @@ namespace ComicStoreDb
                 Console.ReadKey(true);
             }
         }
+
         private void AddCountry()
         {
             var data = AddData<CountryRawData>();
@@ -590,6 +595,7 @@ namespace ComicStoreDb
                 Console.ReadKey(true);
             }
         }
+
         #endregion Add
 
         #region Read
@@ -629,6 +635,7 @@ namespace ComicStoreDb
 
             ReadData(data);
         }
+
         private void ReadCountries()
         {
             Console.Clear();
@@ -652,6 +659,7 @@ namespace ComicStoreDb
 
             ReadData(data);
         }
+
         #endregion Read
 
         #region Update
@@ -751,6 +759,7 @@ namespace ComicStoreDb
                 Console.ReadKey(true);
             }
         }
+
         private void UpdateCountry()
         {
             int id;
@@ -808,6 +817,7 @@ namespace ComicStoreDb
                 Console.ReadKey(true);
             }
         }
+
         #endregion Update
 
         #region Delete
@@ -900,6 +910,7 @@ namespace ComicStoreDb
                     Console.ReadKey(true);
                 }
         }
+
         private void DeleteCountry()
         {
             int id;
@@ -977,6 +988,7 @@ namespace ComicStoreDb
                     Console.ReadKey(true);
                 }
         }
+
         #endregion Delete
 
         #region Statistics
@@ -1032,6 +1044,7 @@ namespace ComicStoreDb
 
             Console.ReadKey(true);
         }
+
         private void LongestComics()
         {
             var query = (from comic in context.Comics
@@ -1045,6 +1058,7 @@ namespace ComicStoreDb
 
             Console.ReadKey(true);
         }
+
         #endregion Statistics
     }
 }
